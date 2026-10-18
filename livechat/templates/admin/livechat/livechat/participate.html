@@ -1,0 +1,51 @@
+{% extends "admin/base_site.html" %}
+{% block breadcrumbs %}
+<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Home</a> &rsaquo;
+<a href="{% url 'admin:livechat_livechat_changelist' %}">Live chats</a> &rsaquo;
+<a href="{% url 'admin:livechat_livechat_change' livechat.pk %}">{{ livechat.title }}</a> &rsaquo; Moderate</div>
+{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<p><strong>{{ livechat.expert }}</strong> &mdash; {{ livechat.chat_starts_at }} to {{ livechat.chat_ends_at }}</p>
+<p>
+  <a href="?">All questions</a> |
+  <a href="?answered=false">Unanswered ({{ unanswered_count }})</a> |
+  <a href="?answered=true">Answered</a> |
+  <a href="{{ livechat.get_absolute_url }}">View public chat</a>
+</p>
+{% if not livechat.is_archived %}
+<form method="post" style="margin:1rem 0">{% csrf_token %}
+  <input type="hidden" name="action" value="archive">
+  <button type="submit" class="button" onclick="return confirm('Archive and close this chat?')">Archive chat</button>
+</form>
+{% endif %}
+{% for question in questions %}
+<fieldset class="module aligned" style="padding:1rem;margin-bottom:1rem">
+  <h2>{{ question.name }} &middot; {{ question.created_at }}</h2>
+  <p style="white-space:pre-wrap">{{ question.body }}</p>
+  <p>{% if question.is_removed %}Hidden{% elif question.is_approved %}Published{% else %}Awaiting approval{% endif %}</p>
+  <form method="post" style="display:inline-block">{% csrf_token %}
+    <input type="hidden" name="question_id" value="{{ question.pk }}">
+    {% if question.is_removed or not question.is_approved %}<button class="button" type="submit" name="action" value="approve">Approve</button>{% endif %}
+    {% if not question.is_removed %}<button class="button" type="submit" name="action" value="hide">Hide</button>{% endif %}
+  </form>
+  {% for response in question.responses.all %}
+    <p><strong>{{ response.author }}</strong> ({{ response.created_at }}): {{ response.response|linebreaksbr }}</p>
+  {% endfor %}
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="respond">
+    <input type="hidden" name="question_id" value="{{ question.pk }}">
+    <label for="reply-{{ question.pk }}">Reply</label>
+    <textarea id="reply-{{ question.pk }}" name="response" rows="3" maxlength="10000" required style="display:block;width:100%;max-width:680px"></textarea>
+    <button class="button default" type="submit">Post reply</button>
+  </form>
+</fieldset>
+{% empty %}<p>No questions match this filter.</p>{% endfor %}
+{% if questions.paginator.num_pages > 1 %}
+<nav aria-label="Question pages">
+{% if questions.has_previous %}<a href="?p={{ questions.previous_page_number }}&amp;answered={{ answered_filter }}">Previous</a>{% endif %}
+Page {{ questions.number }} of {{ questions.paginator.num_pages }}
+{% if questions.has_next %}<a href="?p={{ questions.next_page_number }}&amp;answered={{ answered_filter }}">Next</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

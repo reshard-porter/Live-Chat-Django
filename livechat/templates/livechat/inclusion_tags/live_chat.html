@@ -1,0 +1,47 @@
+{% if live_chat %}
+<section class="hero chat-hero">
+  <a class="back-link" href="{% url 'livechat:index' %}">← All sessions</a>
+  {% if live_chat.is_cancelled %}<span class="status">Cancelled</span>
+  {% elif live_chat.is_in_progress %}<span class="status active">Happening now</span>
+  {% elif live_chat.is_archived %}<span class="status">Archived</span>
+  {% else %}<span class="status">Scheduled / completed</span>{% endif %}
+  <h1>{{ live_chat.title }}</h1>
+  <p class="lead">{{ live_chat.description|linebreaksbr }}</p>
+  <div class="details"><span><strong>Expert</strong> {{ live_chat.expert|default:'Guest expert' }}</span>
+    <span><strong>Starts</strong> {{ live_chat.chat_starts_at|date:'M j, Y · g:i A T' }}</span>
+    <span><strong>Ends</strong> {{ live_chat.chat_ends_at|date:'M j, Y · g:i A T' }}</span></div>
+</section>
+{% if just_submitted %}<div class="notice success" role="status">Thanks! Your question has been received and is awaiting moderation.</div>{% endif %}
+<section class="panel" aria-label="Ask a question">
+  <h2>Ask the expert</h2>
+  {% if can_comment %}
+    <p>Ask a question below. It will appear after a moderator approves it.</p>
+    <form method="post" action="{% url 'livechat:ask_question' live_chat.slug %}">
+      {% csrf_token %}
+      {{ question_form.non_field_errors }}
+      <div class="honeypot" aria-hidden="true">{{ question_form.website }}</div>
+      {% for field in question_form.visible_fields %}
+      <div class="form-field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>
+      {% endfor %}
+      <button class="primary" type="submit">Send question</button>
+    </form>
+  {% elif can_comment_code == 'not_started' %}<p>Questions will open when this session begins.</p>
+  {% elif can_comment_code == 'auth_required' %}<p><a href="{% url 'login' %}?next={{ request.path|urlencode }}">Sign in</a> to post a question.</p>
+  {% elif can_comment_code == 'cancelled' %}<p>This session was cancelled.</p>
+  {% elif can_comment_code == 'limit_reached' %}<p>The question limit has been reached.</p>
+  {% else %}<p>Questions are closed for this session.</p>{% endif %}
+</section>
+<section class="questions"><h2>Questions &amp; answers</h2>
+{% for question in chat_questions %}
+<article class="question">
+  <p class="question-meta">{{ question.name }} · {{ question.created_at|date:'M j, Y · g:i A' }}</p>
+  <p class="question-body">{{ question.body|linebreaksbr }}</p>
+  {% for response in question.responses.all %}
+  <div class="answer"><p class="answer-label">Reply from {{ response.author.get_full_name|default:response.author.username }}</p>
+    <p>{{ response.response|linebreaksbr }}</p></div>
+  {% endfor %}
+</article>
+{% empty %}<p class="empty">No published questions yet.</p>{% endfor %}
+{% include 'livechat/inclusion_tags/pagination.html' with page_obj=chat_questions %}
+</section>
+{% else %}<p class="empty">No currently scheduled chat.</p>{% endif %}

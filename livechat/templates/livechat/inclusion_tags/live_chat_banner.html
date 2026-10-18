@@ -1,0 +1,8 @@
+{% if live_chat_advert %}
+<div class="livechat-banner">
+  <strong>{% if live_chat_advert.is_in_progress %}Happening now:{% else %}Upcoming Q&amp;A:{% endif %}</strong>
+  <a href="{{ live_chat_advert.get_absolute_url }}">{{ live_chat_advert.title }}</a>
+  {% if not live_chat_advert.is_in_progress %}— {{ live_chat_advert.chat_starts_at|date:'M j, g:i A T' }}{% endif %}
+</div>
+{% endif %}
+{% if last_live_chat %}<div class="livechat-banner">Missed {{ last_live_chat.title }}? <a href="{{ last_live_chat.get_absolute_url }}">Read the answers</a>.</div>{% endif %}

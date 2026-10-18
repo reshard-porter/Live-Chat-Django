@@ -1,0 +1,20 @@
+{% extends 'livechat/base.html' %}
+{% block title %}Live Q&amp;A Sessions{% endblock %}
+{% block content %}
+<section class="hero"><p class="eyebrow">Ask questions. Get answers.</p><h1>Live Q&amp;A Sessions</h1><p>Join an expert-led conversation at its scheduled time. Questions are moderated before appearing.</p></section>
+{% if livechats %}
+<div class="chat-grid">
+{% for chat in livechats %}
+<a class="chat-card" href="{{ chat.get_absolute_url }}">
+  {% if chat.is_in_progress %}<span class="status active">In progress</span>
+  {% elif chat.is_archived %}<span class="status">Archived</span>
+  {% else %}<span class="status">Scheduled or finished</span>{% endif %}
+  <h2>{{ chat.title }}</h2><p>{{ chat.description|truncatewords:30 }}</p>
+  <p><strong>Expert:</strong> {{ chat.expert|default:'To be announced' }}</p>
+  <p class="date">{{ chat.chat_starts_at|date:'M j, Y · g:i A T' }}</p>
+</a>
+{% endfor %}
+</div>
+{% else %}<div class="empty">No chats yet. Staff can create one in the <a href="{% url 'admin:index' %}">admin dashboard</a>.</div>{% endif %}
+{% include 'livechat/inclusion_tags/pagination.html' with page_obj=page_obj %}
+{% endblock %}

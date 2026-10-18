@@ -1,0 +1,17 @@
+{% extends 'livechat/base.html' %}
+{% block title %}Past Live Q&amp;A Sessions{% endblock %}
+{% block content %}
+<section class="hero"><p class="eyebrow">Revisit the conversation</p><h1>Session archive</h1><p>Read questions and answers from completed sessions.</p></section>
+<div class="chat-grid">
+{% for chat in livechats %}
+<a class="chat-card" href="{{ chat.get_absolute_url }}">
+  <span class="status">Completed</span>
+  <h2>{{ chat.title }}</h2>
+  <p>{{ chat.description|truncatewords:30 }}</p>
+  <p><strong>Expert:</strong> {{ chat.expert|default:'Guest expert' }}</p>
+  <p class="date">Ended {{ chat.chat_ends_at|date:'M j, Y · g:i A T' }}</p>
+</a>
+{% empty %}<div class="empty">No completed sessions yet.</div>{% endfor %}
+</div>
+{% include 'livechat/inclusion_tags/pagination.html' with page_obj=page_obj %}
+{% endblock %}

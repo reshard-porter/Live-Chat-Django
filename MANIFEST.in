@@ -1,0 +1,4 @@
+include README.md LICENSE AUTHORS.md CHANGELOG.md
+recursive-include livechat/templates *.html
+recursive-include livechat/static *.css *.js
+recursive-include livechat/migrations *.py
